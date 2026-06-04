@@ -1,0 +1,9 @@
+{
+  "short_name": "K-Maths",
+  "name": "K-Maths Online Learning Platform",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1565C0",
+  "background_color": "#ffffff"
+}
