@@ -10,6 +10,7 @@ import { fetchMe } from './app/slices/authSlice';
 import StudentLayout from './components/common/StudentLayout';
 import AdminLayout   from './components/common/AdminLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import PublicLayout  from './components/common/PublicLayout';
 
 // Auth pages
 import Login    from './pages/auth/Login';
@@ -64,10 +65,12 @@ function App() {
       <CssBaseline />
       <BrowserRouter>
         <Routes>
-          {/* Public */}
-          <Route path="/login"    element={!isAuthenticated ? <Login />    : <Navigate to={isAdmin ? '/admin' : '/dashboard'} />} />
-          <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} />
-          <Route path="/"         element={<LandingPage />} />
+          {/* Public Layout */}
+          <Route element={<PublicLayout />}>
+            <Route path="/login"    element={!isAuthenticated ? <Login />    : <Navigate to={isAdmin ? '/admin' : '/dashboard'} />} />
+            <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} />
+            <Route path="/"         element={<LandingPage />} />
+          </Route>
 
           {/* Student portal */}
           <Route element={<ProtectedRoute role="student" />}>

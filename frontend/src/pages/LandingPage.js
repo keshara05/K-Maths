@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-  Box, AppBar, Toolbar, Typography, Button, Container, Grid, Card, CardContent,
+  Box, Typography, Button, Container, Grid, Card, CardContent,
   CardMedia, IconButton, Dialog, DialogContent, DialogTitle, useTheme, Chip, Avatar,
-  ToggleButton, ToggleButtonGroup, Tooltip
+  ToggleButton, ToggleButtonGroup, Tooltip, Stack, Paper, LinearProgress,
+  Accordion, AccordionSummary, AccordionDetails, Alert, TextField
 } from '@mui/material';
 import {
-  PlayCircleOutline, Language, LightMode, DarkMode, SettingsBrightness,
-  School, VideoLibrary, LibraryBooks, HelpOutline, CheckCircle, Phone, Email
+  PlayCircleOutline, School, VideoLibrary, LibraryBooks, HelpOutline, CheckCircle,
+  Phone, Email, Star, ShowChart, CalendarMonth, AccessTime, FileDownload,
+  ExpandMore, Send
 } from '@mui/icons-material';
 import { useThemeLanguage } from '../context/ThemeLanguageContext';
 
@@ -65,15 +67,76 @@ const GRADE_INFO = [
   { grade: '11', fee: '1500', day: 'Sunday 2:00 PM', color: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' },
 ];
 
+const TESTIMONIALS = [
+  {
+    nameEn: 'Sithum Nimsara',
+    nameSi: 'සිතුම් නිම්සර',
+    gradeEn: 'Grade 11 - A Grade',
+    gradeSi: '11 ශ්‍රේණිය - A සාමාර්ථයක්',
+    commentEn: 'K-Maths completely changed my perspective on math. The simplified methods and live class recordings helped me score an A in my O/Ls.',
+    commentSi: 'කේ-මැත්ස් නිසා ගණිතය මට හරිම ලේසි විෂයක් වුණා. සරල ක්‍රමවේද සහ පන්ති පටිගත කිරීම් නිසා මට සාමාන්‍ය පෙළට A සාමාර්ථයක් ගන්න පුළුවන් වුණා.',
+    avatar: 'SN',
+    color: '#1565C0'
+  },
+  {
+    nameEn: 'Arundathi Fernando',
+    nameSi: 'අරුන්දතී ප්‍රනාන්දු',
+    gradeEn: 'Grade 11 - A Grade',
+    gradeSi: '11 ශ්‍රේණිය - A සාමාර්ථයක්',
+    commentEn: 'The weekly quizzes and topic-by-topic analytics allowed me to identify my weak areas and improve rapidly. Thank you K-Maths!',
+    commentSi: 'සතිපතා ප්‍රශ්න පත්‍ර සහ ප්‍රස්ථාර විශ්ලේෂණ මඟින් මගේ දුර්වලතා හඳුනාගෙන ඒවා ඉක්මනින් නිවැරදි කරගන්න උදව් වුණා. ස්තූතියි කේ-මැත්ස්!',
+    avatar: 'AF',
+    color: '#F57C00'
+  },
+  {
+    nameEn: 'Dineth Methsara',
+    nameSi: 'දිනෙත් මෙත්සර',
+    gradeEn: 'Grade 10 Student',
+    gradeSi: '10 ශ්‍රේණියේ ශිෂ්‍යයෙක්',
+    commentEn: 'I missed many school lessons, but the video vault on K-Maths allowed me to catch up easily. The Sinhala explanations are crystal clear.',
+    commentSi: 'මට පාසලේ මඟ හැරුණු පාඩම් බොහොමයක් කේ-මැත්ස් වීඩියෝ මඟින් පහසුවෙන් ආවරණය කර ගැනීමට හැකි වුණා. පැහැදිලි කිරීම් ඉතාමත් පැහැදිලියි.',
+    avatar: 'DM',
+    color: '#2E7D32'
+  }
+];
+
+const FAQS = [
+  {
+    qEn: 'Are the online classes conducted in Sinhala or English medium?',
+    qSi: 'සජීවී පන්ති පැවැත්වෙන්නේ සිංහල මාධ්‍යයෙන්ද නැතහොත් ඉංග්‍රීසි මාධ්‍යයෙන්ද?',
+    aEn: 'Classes are conducted in bilingual methods. We cover explanation terms in Sinhala and use English notations, supporting students from both mediums.',
+    aSi: 'පන්ති ද්විභාෂා ක්‍රමවේදයෙන්ම පැවැත්වේ. සිංහල මාධ්‍යයේ සහ ඉංග්‍රීසි මාධ්‍යයේ සිසුන් දෙපිරිසටම ගැළපෙන පරිදි සිංහල පැහැදිලි කිරීම් මෙන්ම ඉංග්‍රීසි පාරිභාෂික වචනද භාවිතා කරනු ලැබේ.'
+  },
+  {
+    qEn: 'What if I miss a live Zoom class?',
+    qSi: 'සජීවී Zoom පන්තියක් මඟ හැරුණහොත් කුමක් කළ යුතුද?',
+    aEn: 'All live lectures are recorded and uploaded to the student Video Vault within 24 hours. Enrolled students can watch them anytime, anywhere.',
+    aSi: 'සියලුම සජීවී දේශන පටිගත කර පැය 24ක් ඇතුළත ශිෂ්‍ය වීඩියෝ එකතුවට (Video Vault) එක් කරනු ලැබේ. ලියාපදිංචි සිසුන්ට ඕනෑම වේලාවක ඒවා නැරඹිය හැකිය.'
+  },
+  {
+    qEn: 'How can I download class materials and past papers?',
+    qSi: 'පන්ති නිබන්ධන සහ පසුගිය ප්‍රශ්න පත්‍ර බාගත කර ගන්නේ කෙසේද?',
+    aEn: 'Once logged into your student portal, visit the "Resources" section. You can view, search, and download PDFs, model answers, and worksheets instantly.',
+    aSi: 'ඔබේ ශිෂ්‍ය ගිණුමට ඇතුළු වී "Resources" පිටුවට පිවිසෙන්න. එතැනින් සියලුම නිබන්ධන, ආදර්ශ පිළිතුරු සහ වැඩ පත්‍රිකා PDF ආකාරයෙන් නොමිලේ බාගත හැක.'
+  },
+  {
+    qEn: 'How do I pay the monthly course fees?',
+    qSi: 'මාසික පන්ති ගාස්තු ගෙවන්නේ කෙසේද?',
+    aEn: 'You can securely pay online using credit/debit cards or upload bank slip receipts directly via the "Payments" page in your student portal. Accounts are activated immediately upon verification.',
+    aSi: 'ඔබේ ශිෂ්‍ය ගිණුමේ ඇති "Payments" පිටුව හරහා ක්‍රෙඩිට්/ඩෙබිට් කාඩ්පත් මඟින් සුරක්ෂිතව මාර්ගගතව ගෙවිය හැකිය. නැතහොත් බැංකු කුවිතාන්සිය (Bank Slip) අප්ලෝඩ් කළ හැකිය.'
+  }
+];
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const theme = useTheme();
-  const { language, setLanguage, themeMode, setThemeMode, resolvedTheme, t } = useThemeLanguage();
-  const { isAuthenticated } = useSelector((s) => s.auth);
+  const { language, resolvedTheme, t } = useThemeLanguage();
 
   // States
   const [activeVideo, setActiveVideo] = useState(null);
   const [selectedGradeFilter, setSelectedGradeFilter] = useState('all');
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const handleWatchVideo = (video) => {
     setActiveVideo(video);
@@ -81,6 +144,19 @@ export default function LandingPage() {
 
   const handleCloseVideo = () => {
     setActiveVideo(null);
+  };
+
+  const handleContactChange = (e) => {
+    setContactForm({ ...contactForm, [e.target.name]: e.target.value });
+  };
+
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    setFormSubmitted(true);
+    setContactForm({ name: '', email: '', message: '' });
+    setTimeout(() => {
+      setFormSubmitted(false);
+    }, 4500);
   };
 
   const filteredVideos = selectedGradeFilter === 'all'
@@ -94,49 +170,63 @@ export default function LandingPage() {
     }
   };
 
-  // --- Jelly Animation & Float Keyframes ---
+  // --- Spring & Glowing Animations ---
   const fadeInUpStyle = {
     '@keyframes fadeInUp': {
-      from: { opacity: 0, transform: 'translateY(30px)' },
+      from: { opacity: 0, transform: 'translateY(35px)' },
       to: { opacity: 1, transform: 'translateY(0)' }
     },
-    animation: 'fadeInUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards'
+    animation: 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards'
   };
 
-  const floatStyle = (delay = '0s') => ({
+  const floatStyle = (delay = '0s', duration = '6s') => ({
     '@keyframes float': {
       '0%, 100%': { transform: 'translateY(0px)' },
-      '50%': { transform: 'translateY(-12px)' }
+      '50%': { transform: 'translateY(-15px)' }
     },
-    animation: `float 4s ease-in-out infinite`,
+    animation: `float ${duration} ease-in-out infinite`,
     animationDelay: delay
   });
 
   const floatHorizontalStyle = (delay = '0s') => ({
     '@keyframes floatH': {
       '0%, 100%': { transform: 'translateX(0px) rotate(0deg)' },
-      '50%': { transform: 'translateX(10px) rotate(5deg)' }
+      '50%': { transform: 'translateX(12px) rotate(4deg)' }
     },
-    animation: `floatH 5s ease-in-out infinite`,
+    animation: `floatH 7s ease-in-out infinite`,
+    animationDelay: delay
+  });
+
+  const floatSlowBlob = (delay = '0s') => ({
+    '@keyframes floatBlob': {
+      '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+      '33%': { transform: 'translate(30px, -40px) scale(1.1)' },
+      '66%': { transform: 'translate(-20px, 20px) scale(0.95)' }
+    },
+    animation: 'floatBlob 12s ease-in-out infinite',
     animationDelay: delay
   });
 
   const jellyHoverCard = {
     transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
     '&:hover': {
-      transform: 'translateY(-8px) scale(1.03)',
+      transform: 'translateY(-10px)',
       boxShadow: resolvedTheme === 'dark' 
-        ? '0 12px 30px rgba(0,0,0,0.6), 0 0 15px rgba(21,101,192,0.3)' 
-        : '0 12px 30px rgba(21,101,192,0.15)',
+        ? '0 20px 40px rgba(0,0,0,0.6), 0 0 25px rgba(21,101,192,0.3)' 
+        : '0 20px 40px rgba(21,101,192,0.12)',
       borderColor: 'primary.light',
+      '& .MuiAvatar-root': {
+        transform: 'scale(1.1) rotate(5deg)',
+        backgroundColor: 'secondary.main',
+      }
     }
   };
 
   const jellyHoverButton = {
     transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
     '&:hover': {
-      transform: 'scale(1.06)',
-      boxShadow: '0 4px 12px rgba(21,101,192,0.3)'
+      transform: 'scale(1.05)',
+      boxShadow: '0 8px 20px rgba(21,101,192,0.35)'
     },
     '&:active': {
       transform: 'scale(0.96)'
@@ -144,177 +234,175 @@ export default function LandingPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary', overflowX: 'hidden' }}>
-      {/* ── Premium Glassmorphic Header ──────────────────────────────────────── */}
-      <AppBar 
-        position="sticky" 
-        elevation={0} 
-        sx={{ 
-          backdropFilter: 'blur(16px)',
-          backgroundColor: resolvedTheme === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.85)',
-          borderBottom: `1px solid ${resolvedTheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-          zIndex: theme.zIndex.drawer + 1
-        }}
-      >
-        <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={() => navigate('/')}>
-              <Box sx={{
-                width: 38, height: 38, borderRadius: '10px',
-                background: 'linear-gradient(135deg, #1565C0 0%, #1E88E5 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18, fontWeight: 800, color: '#fff',
-                boxShadow: '0 2px 8px rgba(21,101,192,0.4)',
-                ...jellyHoverButton
-              }}>K</Box>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main', letterSpacing: 0.5 }}>
-                {t('landing_title')}
-              </Typography>
-            </Box>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary', overflowX: 'hidden', position: 'relative' }}>
+      
+      {/* ── Ambient Glowing Background Blobs ── */}
+      <Box sx={{
+        position: 'absolute', top: '5%', left: '-5%', width: { xs: 200, md: 450 }, height: { xs: 200, md: 450 },
+        borderRadius: '50%',
+        background: resolvedTheme === 'dark' ? 'radial-gradient(circle, rgba(21,101,192,0.15) 0%, rgba(0,0,0,0) 70%)' : 'radial-gradient(circle, rgba(186,230,253,0.4) 0%, rgba(255,255,255,0) 70%)',
+        filter: 'blur(80px)', zIndex: 1, pointerEvents: 'none', ...floatSlowBlob('0s')
+      }} />
+      <Box sx={{
+        position: 'absolute', top: '35%', right: '-5%', width: { xs: 250, md: 500 }, height: { xs: 250, md: 500 },
+        borderRadius: '50%',
+        background: resolvedTheme === 'dark' ? 'radial-gradient(circle, rgba(245,124,0,0.12) 0%, rgba(0,0,0,0) 70%)' : 'radial-gradient(circle, rgba(254,215,170,0.35) 0%, rgba(255,255,255,0) 70%)',
+        filter: 'blur(90px)', zIndex: 1, pointerEvents: 'none', ...floatSlowBlob('2s')
+      }} />
+      <Box sx={{
+        position: 'absolute', bottom: '15%', left: '5%', width: { xs: 200, md: 400 }, height: { xs: 200, md: 400 },
+        borderRadius: '50%',
+        background: resolvedTheme === 'dark' ? 'radial-gradient(circle, rgba(46,125,50,0.1) 0%, rgba(0,0,0,0) 70%)' : 'radial-gradient(circle, rgba(220,252,231,0.3) 0%, rgba(255,255,255,0) 70%)',
+        filter: 'blur(80px)', zIndex: 1, pointerEvents: 'none', ...floatSlowBlob('4s')
+      }} />
 
-            {/* Nav items */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-              <Button color="inherit" sx={{ borderRadius: 2, px: 2, '&:hover': { bgcolor: 'rgba(21,101,192,0.08)' } }} onClick={() => scrollToSection('features')}>{t('features_title')}</Button>
-              <Button color="inherit" sx={{ borderRadius: 2, px: 2, '&:hover': { bgcolor: 'rgba(21,101,192,0.08)' } }} onClick={() => scrollToSection('videos')}>{t('free_videos_title')}</Button>
-              <Button color="inherit" sx={{ borderRadius: 2, px: 2, '&:hover': { bgcolor: 'rgba(21,101,192,0.08)' } }} onClick={() => scrollToSection('grades')}>{t('grades_section_title')}</Button>
-              <Button color="inherit" sx={{ borderRadius: 2, px: 2, '&:hover': { bgcolor: 'rgba(21,101,192,0.08)' } }} onClick={() => scrollToSection('teacher')}>{t('teacher_title')}</Button>
-            </Box>
-
-            {/* Controls */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              {/* Language Switcher */}
-              <ToggleButtonGroup
-                size="small"
-                value={language}
-                exclusive
-                onChange={(_, val) => val && setLanguage(val)}
-                aria-label="Language Selector"
-                sx={{ bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 2 }}
-              >
-                <ToggleButton value="en" sx={{ px: 1.2, py: 0.4, border: 'none', borderRadius: 2 }}>EN</ToggleButton>
-                <ToggleButton value="si" sx={{ px: 1.2, py: 0.4, border: 'none', borderRadius: 2 }}>සිං</ToggleButton>
-              </ToggleButtonGroup>
-
-              {/* Theme Selector */}
-              <ToggleButtonGroup
-                size="small"
-                value={themeMode}
-                exclusive
-                onChange={(_, val) => val && setThemeMode(val)}
-                aria-label="Theme Selector"
-                sx={{ bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 2 }}
-              >
-                <Tooltip title={t('theme_light')}>
-                  <ToggleButton value="light" sx={{ p: 0.4, border: 'none' }}><LightMode fontSize="small" /></ToggleButton>
-                </Tooltip>
-                <Tooltip title={t('theme_dark')}>
-                  <ToggleButton value="dark" sx={{ p: 0.4, border: 'none' }}><DarkMode fontSize="small" /></ToggleButton>
-                </Tooltip>
-                <Tooltip title={t('theme_auto')}>
-                  <ToggleButton value="auto" sx={{ p: 0.4, border: 'none' }}><SettingsBrightness fontSize="small" /></ToggleButton>
-                </Tooltip>
-              </ToggleButtonGroup>
-
-              {/* CTA Auth */}
-              {isAuthenticated ? (
-                <Button variant="contained" size="small" sx={{ borderRadius: 2, fontWeight: 700, ...jellyHoverButton }} onClick={() => navigate('/dashboard')}>
-                  {t('cta_dashboard')}
-                </Button>
-              ) : (
-                <Button variant="contained" size="small" sx={{ borderRadius: 2, fontWeight: 700, ...jellyHoverButton }} onClick={() => navigate('/login')}>
-                  {t('login')}
-                </Button>
-              )}
-            </Box>
-          </Toolbar>
-        </Container>
-      </AppBar>
-
-      {/* ── Captivating Hero Section ────────────────────────────────────────── */}
+      {/* ── Double-Column Hero Section ──────────────────────────────────────── */}
       <Box sx={{
         position: 'relative',
-        background: resolvedTheme === 'dark'
-          ? 'radial-gradient(circle at 50% 120%, #1e3a8a 0%, #121212 75%)'
-          : 'radial-gradient(circle at 50% 120%, #e0f2fe 0%, #F5F7FA 75%)',
-        py: { xs: 10, md: 16 },
-        textAlign: 'center',
+        py: { xs: 8, md: 14 },
         borderBottom: `1px solid ${theme.palette.divider}`,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        zIndex: 2
       }}>
-        {/* Floating Background Badges */}
+        {/* Floating math equations */}
         <Box sx={{
-          position: 'absolute', top: '15%', left: '10%', opacity: { xs: 0.1, md: 0.2 },
-          bgcolor: 'primary.main', color: '#fff', px: 2, py: 1, borderRadius: 2, fontSize: 18, fontWeight: 800,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', ...floatStyle('0s')
+          position: 'absolute', top: '10%', left: '4%', opacity: 0.15,
+          bgcolor: 'primary.main', color: '#fff', px: 1.8, py: 0.6, borderRadius: 2, fontSize: 13, fontWeight: 800,
+          boxShadow: '0 4px 10px rgba(0,0,0,0.05)', ...floatStyle('0s', '5s')
         }}>
-          √x + y²
+          √x + y² = z
         </Box>
         <Box sx={{
-          position: 'absolute', top: '55%', right: '12%', opacity: { xs: 0.1, md: 0.25 },
-          bgcolor: 'secondary.main', color: '#fff', px: 2.5, py: 1, borderRadius: 3, fontSize: 22, fontWeight: 900,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', ...floatStyle('0.8s')
+          position: 'absolute', bottom: '15%', left: '45%', opacity: 0.15,
+          bgcolor: 'secondary.main', color: '#fff', px: 1.8, py: 0.6, borderRadius: 2, fontSize: 14, fontWeight: 900,
+          boxShadow: '0 4px 10px rgba(0,0,0,0.05)', ...floatStyle('1.5s', '6s')
         }}>
-          πr²
-        </Box>
-        <Box sx={{
-          position: 'absolute', bottom: '15%', left: '15%', opacity: { xs: 0.08, md: 0.15 },
-          bgcolor: 'success.main', color: '#fff', px: 2, py: 1, borderRadius: '50%', fontSize: 24, fontWeight: 900,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', ...floatHorizontalStyle('0.3s')
-        }}>
-          sin θ
-        </Box>
-        <Box sx={{
-          position: 'absolute', top: '25%', right: '20%', opacity: { xs: 0.05, md: 0.12 },
-          bgcolor: 'warning.main', color: '#fff', px: 2, py: 1, borderRadius: 2, fontSize: 20, fontWeight: 700,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', ...floatHorizontalStyle('1.2s')
-        }}>
-          a² + b² = c²
+          π = 3.14159
         </Box>
 
-        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 2, ...fadeInUpStyle }}>
-          <Chip
-            label={t('landing_subtitle')}
-            color="primary"
-            variant="outlined"
-            sx={{ 
-              mb: 3, fontWeight: 700, borderRadius: 5, px: 2, py: 1.5,
-              borderColor: 'primary.main', bgcolor: resolvedTheme === 'dark' ? 'rgba(21,101,192,0.1)' : 'rgba(21,101,192,0.05)'
-            }}
-          />
-          <Typography variant="h2" component="h1" sx={{
-            fontWeight: 900,
-            mb: 2,
-            background: 'linear-gradient(45deg, #1565C0 20%, #F57C00 80%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontSize: { xs: '2.8rem', md: '4.2rem' },
-            letterSpacing: -1
-          }}>
-            {language === 'en' ? 'Master O/L Mathematics' : 'සාමාන්‍ය පෙළ ගණිතය ජයගන්න'}
-          </Typography>
-          <Typography variant="h5" color="text.secondary" sx={{ mb: 6, fontWeight: 400, maxWidth: '650px', mx: 'auto', lineHeight: 1.6 }}>
-            {t('landing_tagline')}
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button 
-              variant="contained" 
-              size="large" 
-              startIcon={<School />} 
-              sx={{ borderRadius: 3, px: 4, py: 1.8, fontSize: 16, fontWeight: 700, ...jellyHoverButton }}
-              onClick={() => navigate('/register')}
-            >
-              {t('cta_join_now')}
-            </Button>
-            <Button 
-              variant="outlined" 
-              size="large" 
-              startIcon={<PlayCircleOutline />} 
-              sx={{ borderRadius: 3, px: 4, py: 1.8, fontSize: 16, fontWeight: 700, ...jellyHoverButton }}
-              onClick={() => scrollToSection('videos')}
-            >
-              {t('cta_free_videos')}
-            </Button>
-          </Box>
+        <Container maxWidth="lg">
+          <Grid container spacing={6} alignItems="center">
+            {/* Left Typography Column */}
+            <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'center', md: 'left' }, ...fadeInUpStyle }}>
+              <Chip
+                label={t('landing_subtitle')}
+                color="primary"
+                variant="outlined"
+                sx={{ 
+                  mb: 3, fontWeight: 700, borderRadius: '20px', px: 2, py: 1.8, fontSize: '0.85rem',
+                  borderColor: 'primary.main', bgcolor: resolvedTheme === 'dark' ? 'rgba(21,101,192,0.15)' : 'rgba(21,101,192,0.06)'
+                }}
+              />
+              <Typography variant="h1" sx={{
+                fontWeight: 900, mb: 2.5,
+                background: 'linear-gradient(45deg, #1565C0 25%, #F57C00 85%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                fontSize: { xs: '2.8rem', sm: '3.6rem', md: '4.4rem' },
+                lineHeight: 1.1, letterSpacing: -1.5
+              }}>
+                {language === 'en' ? 'Master O/L Mathematics' : 'සාමාන්‍ය පෙළ ගණිතය ජයගන්න'}
+              </Typography>
+              <Typography variant="h5" color="text.secondary" sx={{ mb: 5, fontWeight: 400, fontSize: { xs: '1.1rem', md: '1.25rem' }, lineHeight: 1.6 }}>
+                {t('landing_tagline')}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2.5, justifyContent: { xs: 'center', md: 'flex-start' }, flexWrap: 'wrap' }}>
+                <Button 
+                  variant="contained" size="large" startIcon={<School />} 
+                  sx={{ borderRadius: 3, px: 4, py: 1.8, fontSize: 16, fontWeight: 700, ...jellyHoverButton }}
+                  onClick={() => navigate('/register')}
+                >
+                  {t('cta_join_now')}
+                </Button>
+                <Button 
+                  variant="outlined" size="large" startIcon={<PlayCircleOutline />} 
+                  sx={{ borderRadius: 3, px: 4, py: 1.8, fontSize: 16, fontWeight: 700, ...jellyHoverButton }}
+                  onClick={() => scrollToSection('videos')}
+                >
+                  {t('cta_free_videos')}
+                </Button>
+              </Box>
+            </Grid>
+
+            {/* Right Column: Premium Interactive Glassmorphic Dashboard Preview */}
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center', ...floatStyle('0.5s', '8s') }}>
+              <Paper 
+                elevation={0}
+                sx={{
+                  width: '100%', maxWidth: 460, borderRadius: 5, p: 3,
+                  bgcolor: resolvedTheme === 'dark' ? 'rgba(30, 41, 59, 0.5)' : 'rgba(255, 255, 255, 0.45)',
+                  backdropFilter: 'blur(24px)',
+                  border: `1px solid ${resolvedTheme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(21,101,192,0.12)'}`,
+                  boxShadow: resolvedTheme === 'dark' ? '0 30px 60px rgba(0,0,0,0.5)' : '0 30px 60px rgba(21,101,192,0.12)',
+                  position: 'relative'
+                }}
+              >
+                {/* Floating XP Badge */}
+                <Box sx={{
+                  position: 'absolute', top: '-15px', right: '-15px',
+                  bgcolor: 'warning.main', color: '#fff', px: 2, py: 0.8, borderRadius: 3,
+                  boxShadow: '0 8px 16px rgba(245,124,0,0.3)', fontWeight: 800, fontSize: 13,
+                  ...floatHorizontalStyle('0.8s')
+                }}>
+                  🔥 +150 XP Streak
+                </Box>
+
+                <Stack spacing={2.5}>
+                  {/* Header bar mock */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36, fontSize: 14, fontWeight: 700 }}>K</Avatar>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" display="block">Student Portal</Typography>
+                        <Typography variant="body2" fontWeight={700}>Keshara Rathnayaka</Typography>
+                      </Box>
+                    </Box>
+                    <Chip label="Grade 11" color="primary" size="small" sx={{ fontWeight: 700, borderRadius: 2 }} />
+                  </Box>
+
+                  {/* Circular progress display mock */}
+                  <Box sx={{ p: 2, bgcolor: resolvedTheme === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.6)', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ position: 'relative', width: 64, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="64" height="64">
+                        <circle cx="32" cy="32" r="26" fill="transparent" stroke={resolvedTheme === 'dark' ? '#334155' : '#e2e8f0'} strokeWidth="5" />
+                        <circle cx="32" cy="32" r="26" fill="transparent" stroke="#1565C0" strokeWidth="5" strokeDasharray="163" strokeDashoffset="35" strokeLinecap="round" transform="rotate(-90 32 32)" />
+                      </svg>
+                      <Typography variant="caption" sx={{ position: 'absolute', fontWeight: 800, color: 'primary.main' }}>82%</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={750}>Syllabus Completed</Typography>
+                      <Typography variant="caption" color="text.secondary">8/10 Chapters Mastered successfully</Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Statistics Chart Preview Mock */}
+                  <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
+                      <Typography variant="caption" fontWeight={700}>Trigonometry Mastery</Typography>
+                      <Typography variant="caption" color="success.main" fontWeight={800}>92% Accuracy</Typography>
+                    </Box>
+                    <LinearProgress variant="determinate" value={92} color="success" sx={{ height: 6, borderRadius: 3 }} />
+                  </Box>
+                  <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
+                      <Typography variant="caption" fontWeight={700}>Algebraic Fractions</Typography>
+                      <Typography variant="caption" color="warning.main" fontWeight={800}>74% Accuracy</Typography>
+                    </Box>
+                    <LinearProgress variant="determinate" value={74} color="warning" sx={{ height: 6, borderRadius: 3 }} />
+                  </Box>
+
+                  {/* Class links mock */}
+                  <Stack direction="row" spacing={1.5}>
+                    <Button variant="contained" size="small" startIcon={<ShowChart />} sx={{ flex: 1, borderRadius: 2.5, textTransform: 'none', fontWeight: 700 }}>
+                      Analytics
+                    </Button>
+                    <Button variant="outlined" size="small" startIcon={<AccessTime />} sx={{ flex: 1, borderRadius: 2.5, textTransform: 'none', fontWeight: 700 }}>
+                      Schedule
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Paper>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
 
@@ -330,7 +418,7 @@ export default function LandingPage() {
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ height: '100%', textAlign: 'center', p: 3, ...jellyHoverCard }}>
               <CardContent>
-                <Avatar sx={{ bgcolor: 'primary.light', width: 60, height: 60, mx: 'auto', mb: 3, boxShadow: '0 4px 10px rgba(30,136,229,0.3)' }}>
+                <Avatar sx={{ bgcolor: 'primary.light', width: 60, height: 60, mx: 'auto', mb: 3, transition: 'all 0.3s ease', boxShadow: '0 4px 10px rgba(30,136,229,0.3)' }}>
                   <School fontSize="large" sx={{ color: '#fff' }} />
                 </Avatar>
                 <Typography variant="h6" fontWeight={700} gutterBottom>{t('features_live_title')}</Typography>
@@ -341,7 +429,7 @@ export default function LandingPage() {
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ height: '100%', textAlign: 'center', p: 3, ...jellyHoverCard }}>
               <CardContent>
-                <Avatar sx={{ bgcolor: 'secondary.light', width: 60, height: 60, mx: 'auto', mb: 3, boxShadow: '0 4px 10px rgba(255,167,38,0.3)' }}>
+                <Avatar sx={{ bgcolor: 'secondary.light', width: 60, height: 60, mx: 'auto', mb: 3, transition: 'all 0.3s ease', boxShadow: '0 4px 10px rgba(255,167,38,0.3)' }}>
                   <VideoLibrary fontSize="large" sx={{ color: '#fff' }} />
                 </Avatar>
                 <Typography variant="h6" fontWeight={700} gutterBottom>{t('features_videos_title')}</Typography>
@@ -352,7 +440,7 @@ export default function LandingPage() {
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ height: '100%', textAlign: 'center', p: 3, ...jellyHoverCard }}>
               <CardContent>
-                <Avatar sx={{ bgcolor: 'success.light', width: 60, height: 60, mx: 'auto', mb: 3, boxShadow: '0 4px 10px rgba(46,125,50,0.3)' }}>
+                <Avatar sx={{ bgcolor: 'success.light', width: 60, height: 60, mx: 'auto', mb: 3, transition: 'all 0.3s ease', boxShadow: '0 4px 10px rgba(46,125,50,0.3)' }}>
                   <LibraryBooks fontSize="large" sx={{ color: '#fff' }} />
                 </Avatar>
                 <Typography variant="h6" fontWeight={700} gutterBottom>{t('features_resources_title')}</Typography>
@@ -363,7 +451,7 @@ export default function LandingPage() {
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ height: '100%', textAlign: 'center', p: 3, ...jellyHoverCard }}>
               <CardContent>
-                <Avatar sx={{ bgcolor: 'warning.light', width: 60, height: 60, mx: 'auto', mb: 3, boxShadow: '0 4px 10px rgba(249,168,37,0.3)' }}>
+                <Avatar sx={{ bgcolor: 'warning.light', width: 60, height: 60, mx: 'auto', mb: 3, transition: 'all 0.3s ease', boxShadow: '0 4px 10px rgba(249,168,37,0.3)' }}>
                   <HelpOutline fontSize="large" sx={{ color: '#fff' }} />
                 </Avatar>
                 <Typography variant="h6" fontWeight={700} gutterBottom>{t('features_quizzes_title')}</Typography>
@@ -507,6 +595,45 @@ export default function LandingPage() {
         </Grid>
       </Container>
 
+      {/* ── Testimonials Section ─────────────────────────────────────────────── */}
+      <Container maxWidth="lg" sx={{ py: 12, borderTop: `1px solid ${theme.palette.divider}` }}>
+        <Typography variant="h4" textAlign="center" fontWeight={900} mb={1}>
+          {language === 'en' ? 'Success Stories' : 'සාර්ථකත්වයේ කතන්දර'}
+        </Typography>
+        <Typography variant="body1" textAlign="center" color="text.secondary" mb={8}>
+          {language === 'en' ? 'Hear from students who conquered O/L mathematics with K-Maths' : 'කේ-මැත්ස් සමඟින් සාමාන්‍ය පෙළ ගණිතය ජයගත් අපේ දරුවන්ගේ අදහස්'}
+        </Typography>
+        <Grid container spacing={4}>
+          {TESTIMONIALS.map((t, i) => (
+            <Grid item xs={12} md={4} key={i}>
+              <Card sx={{ height: '100%', p: 3.5, display: 'flex', flexDirection: 'column', ...jellyHoverCard }}>
+                <CardContent sx={{ flexGrow: 1, p: 0 }}>
+                  <Stack direction="row" spacing={2} alignItems="center" mb={2.5}>
+                    <Avatar sx={{ bgcolor: `${t.color}15`, color: t.color, fontWeight: 800, width: 48, height: 48 }}>
+                      {t.avatar}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight={750}>
+                        {language === 'en' ? t.nameEn : t.nameSi}
+                      </Typography>
+                      <Typography variant="caption" color="primary.main" fontWeight={700}>
+                        {language === 'en' ? t.gradeEn : t.gradeSi}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  <Box sx={{ display: 'flex', color: 'warning.main', mb: 2 }}>
+                    {[...Array(5)].map((_, idx) => <Star key={idx} fontSize="small" />)}
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" lineHeight={1.7} sx={{ fontStyle: 'italic', opacity: 0.9 }}>
+                    "{language === 'en' ? t.commentEn : t.commentSi}"
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+
       {/* ── Teacher Section ─────────────────────────────────────────────────── */}
       <Box sx={{ bgcolor: resolvedTheme === 'dark' ? '#18181b' : '#f8fafc', py: 10, borderTop: `1px solid ${theme.palette.divider}`, borderBottom: `1px solid ${theme.palette.divider}` }} id="teacher">
         <Container maxWidth="md">
@@ -515,7 +642,8 @@ export default function LandingPage() {
               sx={{ 
                 width: 140, height: 140, bgcolor: 'primary.main', fontSize: 48, fontWeight: 800,
                 boxShadow: '0 8px 24px rgba(21,101,192,0.3)',
-                background: 'linear-gradient(135deg, #0d47a1 0%, #1e88e5 100%)'
+                background: 'linear-gradient(135deg, #0d47a1 0%, #1e88e5 100%)',
+                transition: 'all 0.3s ease'
               }}
             >
               KM
@@ -533,9 +661,57 @@ export default function LandingPage() {
         </Container>
       </Box>
 
-      {/* ── Contact Details ─────────────────────────────────────────────────── */}
+      {/* ── FAQ Section ─────────────────────────────────────────────────────── */}
+      <Box sx={{ py: 12, borderBottom: `1px solid ${theme.palette.divider}` }}>
+        <Container maxWidth="md">
+          <Typography variant="h4" textAlign="center" fontWeight={900} mb={1}>
+            {language === 'en' ? 'Frequently Asked Questions' : 'නිතර අසන ප්‍රශ්න'}
+          </Typography>
+          <Typography variant="body1" textAlign="center" color="text.secondary" mb={8}>
+            {language === 'en' ? 'Got questions? We have answers.' : 'පන්ති සම්බන්ධයෙන් ඔබට ඇති ගැටලුවලට පිළිතුරු'}
+          </Typography>
+          <Stack spacing={2}>
+            {FAQS.map((faq, i) => (
+              <Accordion 
+                key={i} 
+                elevation={0}
+                sx={{
+                  borderRadius: '12px !important',
+                  border: `1px solid ${resolvedTheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+                  bgcolor: resolvedTheme === 'dark' ? 'rgba(30, 41, 59, 0.2)' : 'rgba(255, 255, 255, 0.4)',
+                  backdropFilter: 'blur(10px)',
+                  '&:before': { display: 'none' },
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    borderColor: 'primary.light',
+                    boxShadow: resolvedTheme === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 12px rgba(21,101,192,0.05)'
+                  }
+                }}
+              >
+                <AccordionSummary 
+                  expandIcon={<ExpandMore sx={{ color: 'primary.main' }} />}
+                  sx={{ px: 3, py: 1.5 }}
+                >
+                  <Typography variant="subtitle1" fontWeight={750}>
+                    {language === 'en' ? faq.qEn : faq.qSi}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ px: 3, pb: 3, pt: 0 }}>
+                  <Typography variant="body2" color="text.secondary" lineHeight={1.7}>
+                    {language === 'en' ? faq.aEn : faq.aSi}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* ── Contact Details & Form Section ──────────────────────────────────── */}
       <Container maxWidth="lg" sx={{ py: 12 }}>
         <Grid container spacing={6} justifyContent="center" alignItems="center">
+          {/* Left Column: Contact info */}
           <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
             <Typography variant="h4" fontWeight={900} mb={2}>
               {language === 'en' ? 'Get In Touch' : 'අප හා සම්බන්ධ වන්න'}
@@ -561,6 +737,93 @@ export default function LandingPage() {
                 </Box>
               </Box>
             </Box>
+          </Grid>
+
+          {/* Right Column: Premium Contact Form */}
+          <Grid item xs={12} md={6}>
+            <Paper 
+              elevation={0}
+              sx={{
+                p: { xs: 3.5, sm: 4.5 },
+                borderRadius: 5,
+                backdropFilter: 'blur(20px)',
+                bgcolor: resolvedTheme === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(255, 255, 255, 0.55)',
+                border: `1px solid ${resolvedTheme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(21,101,192,0.1)'}`,
+                boxShadow: resolvedTheme === 'dark' 
+                  ? '0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' 
+                  : '0 20px 40px rgba(21,101,192,0.06)'
+              }}
+            >
+              {formSubmitted ? (
+                <Alert severity="success" sx={{ borderRadius: 2.5, py: 1.5 }}>
+                  {language === 'en' 
+                    ? 'Thank you! Your message has been sent successfully.' 
+                    : 'ස්තූතියි! ඔබේ පණිවිඩය සාර්ථකව යවන ලදී.'}
+                </Alert>
+              ) : (
+                <Box component="form" onSubmit={handleContactSubmit}>
+                  <Typography variant="h6" fontWeight={800} mb={3.5} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Send fontSize="small" color="primary" />
+                    {language === 'en' ? 'Send a Message' : 'පණිවිඩයක් එවන්න'}
+                  </Typography>
+                  <Stack spacing={2.5}>
+                    <TextField 
+                      fullWidth 
+                      label={language === 'en' ? 'Your Name' : 'ඔබේ නම'} 
+                      name="name"
+                      value={contactForm.name}
+                      onChange={handleContactChange}
+                      required
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2.5,
+                          bgcolor: resolvedTheme === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)',
+                        }
+                      }}
+                    />
+                    <TextField 
+                      fullWidth 
+                      type="email" 
+                      label={language === 'en' ? 'Email Address' : 'විද්‍යුත් ලිපිනය'} 
+                      name="email"
+                      value={contactForm.email}
+                      onChange={handleContactChange}
+                      required
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2.5,
+                          bgcolor: resolvedTheme === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)',
+                        }
+                      }}
+                    />
+                    <TextField 
+                      fullWidth 
+                      multiline 
+                      rows={4} 
+                      label={language === 'en' ? 'Your Message' : 'ඔබේ පණිවිඩය'} 
+                      name="message"
+                      value={contactForm.message}
+                      onChange={handleContactChange}
+                      required
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2.5,
+                          bgcolor: resolvedTheme === 'dark' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)',
+                        }
+                      }}
+                    />
+                    <Button 
+                      type="submit" 
+                      variant="contained" 
+                      size="large"
+                      sx={{ borderRadius: 2.5, fontWeight: 700, py: 1.5, ...jellyHoverButton }}
+                    >
+                      {language === 'en' ? 'Send Message' : 'පණිවිඩය එවන්න'}
+                    </Button>
+                  </Stack>
+                </Box>
+              )}
+            </Paper>
           </Grid>
         </Grid>
       </Container>
